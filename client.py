@@ -5,7 +5,7 @@ nickname = input("choose an nickname:  ")
 
 client = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 
-host = '192.168.43.234'
+host = '192.168.226.190'
 port = 55556
 
 client.connect((host,port))
