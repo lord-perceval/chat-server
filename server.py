@@ -5,12 +5,12 @@ import tkinter as tk
 from tkinter import scrolledtext
 
 # Your existing server code
-host = '192.168.1.101'
-port = 55556
+host = '192.168.1.9'
+port =  55556
 
 server_running = True  # Variable to control the server state
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR,  1)
 server.bind((host, port))
 server.listen()
 
@@ -19,6 +19,7 @@ nicknames = []
 
 # Create a queue for messages
 message_queue = queue.Queue()
+
 def handle_disconnect(client):
     if client in clients:
         clients.remove(client)
@@ -31,7 +32,7 @@ def broadcast(message):
     for client in clients:
         try:
             client.send(message)
-        except:
+        except socket.error:
             # Handle cases where the client connection is no longer valid
             handle_disconnect(client)
 
@@ -43,7 +44,7 @@ def handle(client):
             if message.startswith('FILE:'):
                 # If the message starts with 'FILE:', it indicates a file transfer
                 file_data = client.recv(1024)
-                file_name, file_content = file_data.split(b'\n', 1)
+                file_name, file_content = file_data.split(b'\n',  1)
                 file_name = file_name.decode('utf-8')
 
                 broadcast(f'{nicknames[clients.index(client)]} sent a file: {file_name}'.encode('ascii'))
@@ -56,18 +57,10 @@ def handle(client):
             else:
                 # Otherwise, it's a regular message
                 broadcast(message.encode('utf-8'))
-        except Exception as e:
+        except socket.error as e:
             print("An error occurred:", e)
             handle_disconnect(client)
             break
-
-def broadcast(message):
-    for client in clients:
-        try:
-            client.send(message)
-        except:
-            # Handle cases where the client connection is no longer valid
-            handle_disconnect(client)
 
 def receive():
     while server_running:
@@ -89,7 +82,7 @@ def receive():
                 args=(client,)
             )
             thread.start()
-        except Exception as e:
+        except socket.error as e:
             print("An error occurred:", e)
 
 # GUI code
@@ -105,7 +98,6 @@ def stop_server():
     server_running = False
     server.close()  # Close the server socket to stop accepting new connections
     message_queue.put("Server stopped")
-
 
 def create_gui():
     root = tk.Tk()
@@ -125,7 +117,7 @@ def create_gui():
         while not message_queue.empty():
             message = message_queue.get()
             output_text.insert(tk.END, message + '\n')
-        root.after(100, update_gui)  # Check the queue every  100ms
+        root.after(100, update_gui)  # Check the queue every   100ms
 
     update_gui()  # Start updating the GUI
 
