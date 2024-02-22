@@ -3,6 +3,7 @@ from tkinter import scrolledtext, simpledialog
 import socket
 import threading
 import random
+import datetime
 
 class ChatClientGUI:
     def __init__(self, master):
@@ -27,7 +28,7 @@ class ChatClientGUI:
         self.nickname = simpledialog.askstring("Nickname", "Choose a nickname:")
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.host = '192.168.1.101'  # Update with server IP
-        self.port =  55556
+        self.port =   55556
         self.client_socket.connect((self.host, self.port))
         self.client_socket.send(self.nickname.encode('utf-8'))
 
@@ -57,7 +58,7 @@ class ChatClientGUI:
 
     def display_message(self, message):
         try:
-            sender, msg = message.split(':',  1)
+            sender, msg = message.split(':',   1)
 
             # Check if the sender's color is already known
             if sender not in self.user_colors:
@@ -69,7 +70,9 @@ class ChatClientGUI:
             # Use the color associated with the sender
             user_color = self.user_colors[sender]
             self.chat_history.configure(state='normal')
-            self.chat_history.insert('end', f"{sender}: {msg}\n", user_color)
+            # Insert a timestamp before each message
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.chat_history.insert('end', f"{timestamp} {sender}: {msg}\n", user_color)
             self.chat_history.tag_add(user_color, 'end-2c', 'end-1c')  # Apply the tag to the inserted text
             self.chat_history.configure(state='disabled')
             self.chat_history.see('end')
