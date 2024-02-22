@@ -5,7 +5,7 @@ import tkinter as tk
 from tkinter import scrolledtext
 
 # Your existing server code
-host = '192.168.226.190'
+host = '192.168.1.101'
 port =   55556
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
