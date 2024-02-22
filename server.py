@@ -6,10 +6,12 @@ from tkinter import scrolledtext
 
 # Your existing server code
 host = '192.168.1.101'
-port =   55556
+port = 55556
+
+server_running = True  # Variable to control the server state
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR,   1)
+server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 server.bind((host, port))
 server.listen()
 
@@ -33,24 +35,24 @@ def handle(client):
             clients.remove(client)
             client.close()
             nickname = nicknames[index]
-            broadcast(f'[nickname] left the chat'.encode('ascii'))
+            broadcast(f'{nickname} left the chat'.encode('ascii'))
             nicknames.remove(nickname)
             break
 
 def receive():
-    while True:
+    while server_running:
         client, address = server.accept()
         message_queue.put(f"connected with {str(address)}")
-        
+
         client.send('NICK'.encode('ascii'))
         nickname = client.recv(1024).decode('ascii')
         nicknames.append(nickname)
         clients.append(client)
-        
+
         message_queue.put(f'nickname of client is {nickname}')
         broadcast(f'{nickname} joined the chat'.encode('ascii'))
         client.send("connected to the server".encode('ascii'))
-        
+
         thread = threading.Thread(
             target=handle,
             args=(client,)
@@ -59,13 +61,17 @@ def receive():
 
 # GUI code
 def start_server():
+    global server_running
+    server_running = True
     server_thread = threading.Thread(target=receive)
     server_thread.start()
     message_queue.put("Server is listening")
 
 def stop_server():
-    # Implement a way to stop the server
-    pass
+    global server_running
+    server_running = False
+    server.close()  # Close the server socket to stop accepting new connections
+    message_queue.put("Server stopped")
 
 def create_gui():
     root = tk.Tk()
