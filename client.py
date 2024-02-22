@@ -22,7 +22,7 @@ class ChatClientGUI:
     def connect_to_server(self):
         self.nickname = input("Choose a nickname: ")
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.host = '192.168.43.234'  # Update with server IP
+        self.host = '192.168.226.190'  # Update with server IP
         self.port = 55556
         self.client_socket.connect((self.host, self.port))
         self.client_socket.send(self.nickname.encode('utf-8'))
@@ -40,18 +40,28 @@ class ChatClientGUI:
         while True:
             try:
                 message = self.client_socket.recv(1024).decode('utf-8')
-                self.display_message(message)
+                # Prepend the client's nickname to the message
+                message_with_nickname = f"{self.nickname}: {message}"
+                self.display_message(message_with_nickname)
             except Exception as e:
                 print("An error occurred:", e)
                 self.client_socket.close()
                 break
 
     def display_message(self, message):
-        self.chat_history.configure(state='normal')
-        self.chat_history.insert('end', message + '\n')
-        self.chat_history.configure(state='disabled')
-        self.chat_history.see('end')
-
+    # Assuming the message format is 'nickname: message'
+        try:
+            nickname, msg = message.split(':',  1)
+            self.chat_history.configure(state='normal')
+            self.chat_history.insert('end', f"{nickname}: {msg}\n")
+            self.chat_history.configure(state='disabled')
+            self.chat_history.see('end')
+        except ValueError:
+        # If the message does not contain a colon, display it as is
+            self.chat_history.configure(state='normal')
+            self.chat_history.insert('end', message + '\n')
+            self.chat_history.configure(state='disabled')
+            self.chat_history.see('end')
 def main():
     root = tk.Tk()
     app = ChatClientGUI(root)
