@@ -59,21 +59,28 @@ class ChatClientGUI:
         message = self.entry_field.get()
 
         if message.startswith('/file'):
-            # If the message starts with '/file', treat it as a file path
+        # If the message starts with '/file', treat it as a file path
             file_path = message.split(' ', 1)[1]
             self.send_file(file_path)
         elif message:
-            # Otherwise, treat it as a regular message
+        # Otherwise, treat it as a regular message
             full_message = f"{self.nickname}: {message}"
             self.client_socket.send(full_message.encode('utf-8'))
-        
+            self.display_message(full_message)  # Display the message locally
+
         self.entry_field.delete(0, tk.END)
+
+
+
+
 
     def receive(self):
         while True:
             try:
                 message = self.client_socket.recv(1024).decode('utf-8')
-                self.display_message(message)
+            # Check if the message is from the current user
+                if not message.startswith(self.nickname + ':'):
+                    self.display_message(message)
             except Exception as e:
                 print("An error occurred:", e)
                 self.client_socket.close()

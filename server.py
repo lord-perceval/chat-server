@@ -19,6 +19,13 @@ nicknames = []
 
 # Create a queue for messages
 message_queue = queue.Queue()
+def handle_disconnect(client):
+    if client in clients:
+        clients.remove(client)
+        client.close()
+        nickname = nicknames[clients.index(client)]
+        nicknames.remove(nickname)
+        broadcast(f'{nickname} left the chat'.encode('ascii'))
 
 def broadcast(message):
     for client in clients:
@@ -54,14 +61,13 @@ def handle(client):
             handle_disconnect(client)
             break
 
-def handle_disconnect(client):
-    if client in clients:
-        index = clients.index(client)
-        nickname = nicknames[index]
-        broadcast(f'{nickname} left the chat'.encode('ascii'))
-        clients.remove(client)
-        nicknames.remove(nickname)
-        client.close()
+def broadcast(message):
+    for client in clients:
+        try:
+            client.send(message)
+        except:
+            # Handle cases where the client connection is no longer valid
+            handle_disconnect(client)
 
 def receive():
     while server_running:
