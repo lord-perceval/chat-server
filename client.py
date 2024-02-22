@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import scrolledtext
+from tkinter import scrolledtext, simpledialog
 import socket
 import threading
 import random
@@ -22,15 +22,17 @@ class ChatClientGUI:
         self.connect_to_server()
 
     def connect_to_server(self):
-        self.nickname = input("Choose a nickname: ")
+        self.nickname = simpledialog.askstring("Nickname", "Choose a nickname:")
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.host = '192.168.1.101'  # Update with server IP
-        self.port = 55556
+        self.port =  55556
         self.client_socket.connect((self.host, self.port))
         self.client_socket.send(self.nickname.encode('utf-8'))
 
         self.receive_thread = threading.Thread(target=self.receive)
         self.receive_thread.start()
+
+    # The rest of your class methods remain unchanged
 
     def send_message(self):
         message = self.entry_field.get()
