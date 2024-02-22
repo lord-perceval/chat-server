@@ -25,26 +25,50 @@ class ChatClientGUI:
 
     # The rest of your class methods remain unchanged
     def connect_to_server(self):
-        self.nickname = simpledialog.askstring("Nickname", "Choose a nickname:")
-        self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.host = '192.168.1.101'  # Update with server IP
-        self.port =   55556
-        self.client_socket.connect((self.host, self.port))
-        self.client_socket.send(self.nickname.encode('utf-8'))
+        try:
+            self.nickname = simpledialog.askstring("Nickname", "Choose a nickname:")
+            self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.host = '192.168.1.101'  # Update with server IP
+            self.port = 55556
+            self.client_socket.connect((self.host, self.port))
+            self.client_socket.send(self.nickname.encode('utf-8'))
 
-        self.receive_thread = threading.Thread(target=self.receive)
-        self.receive_thread.start()
+            self.receive_thread = threading.Thread(target=self.receive)
+            self.receive_thread.start()
+        except Exception as e:
+            print("An error occurred during connection:", e)
+            self.display_message("Failed to connect to the server. Please try again.")
 
-    # The rest of your class methods remain unchanged
+    def on_closing(self):
+        try:
+            self.client_socket.close()
+        except:
+            pass  # Ignore errors when closing the socket
+        self.master.destroy()
+
+    def send_file(self, file_path):
+        try:
+            with open(file_path, 'rb') as file:
+                file_name = file_path.split('/')[-1]  # Extract file name from the path
+                file_data = f'FILE:{file_name}\n'.encode('utf-8') + file.read()
+                self.client_socket.send(file_data)
+        except Exception as e:
+            print("An error occurred while sending the file:", e)
 
     def send_message(self):
         message = self.entry_field.get()
-        if message:
-        # Prefix the message with the nickname
+
+        if message.startswith('/file'):
+            # If the message starts with '/file', treat it as a file path
+            file_path = message.split(' ', 1)[1]
+            self.send_file(file_path)
+        elif message:
+            # Otherwise, treat it as a regular message
             full_message = f"{self.nickname}: {message}"
             self.client_socket.send(full_message.encode('utf-8'))
-            self.entry_field.delete(0, tk.END)
-            
+        
+        self.entry_field.delete(0, tk.END)
+
     def receive(self):
         while True:
             try:
@@ -85,10 +109,16 @@ class ChatClientGUI:
 
     def generate_random_color(self):
         return '#%02x%02x%02x' % (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+    
+    def on_closing(self):
+        self.client_socket.close()
+        self.master.destroy()
+
 
 def main():
     root = tk.Tk()
     app = ChatClientGUI(root)
+    root.protocol("WM_DELETE_WINDOW", app.on_closing)  # Bind the closing event
     root.mainloop()
 
 if __name__ == "__main__":
