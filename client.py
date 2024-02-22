@@ -19,7 +19,7 @@ class ChatClientGUI:
         self.send_button = tk.Button(master, text="Send", command=self.send_message)
         self.send_button.pack()
 
-        self.user_color = self.generate_random_color()  # Unique color for the user
+        self.user_colors = {}  # Dictionary to map nicknames to colors
         self.connect_to_server()
 
     # The rest of your class methods remain unchanged
@@ -57,12 +57,17 @@ class ChatClientGUI:
 
     def display_message(self, message):
         try:
-            sender, msg = message.split(':', 1)
+            sender, msg = message.split(':',  1)
 
-            # Use a unique color for each user in the GUI
-            user_color = self.generate_random_color()
-            self.chat_history.tag_configure(user_color, foreground=user_color)
-            
+            # Check if the sender's color is already known
+            if sender not in self.user_colors:
+                # Generate a new color for the user
+                user_color = self.generate_random_color()
+                self.user_colors[sender] = user_color
+                self.chat_history.tag_configure(user_color, foreground=user_color)
+
+            # Use the color associated with the sender
+            user_color = self.user_colors[sender]
             self.chat_history.configure(state='normal')
             self.chat_history.insert('end', f"{sender}: {msg}\n", user_color)
             self.chat_history.tag_add(user_color, 'end-2c', 'end-1c')  # Apply the tag to the inserted text
