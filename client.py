@@ -14,6 +14,7 @@ class ChatClientGUI:
 
         self.entry_field = tk.Entry(master)
         self.entry_field.pack(expand=True, fill='x')
+        self.entry_field.bind('<Return>', lambda event: self.send_message())  # Bind Enter key to send_message
 
         self.send_button = tk.Button(master, text="Send", command=self.send_message)
         self.send_button.pack()
@@ -21,6 +22,7 @@ class ChatClientGUI:
         self.user_color = self.generate_random_color()  # Unique color for the user
         self.connect_to_server()
 
+    # The rest of your class methods remain unchanged
     def connect_to_server(self):
         self.nickname = simpledialog.askstring("Nickname", "Choose a nickname:")
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
