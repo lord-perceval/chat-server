@@ -4,6 +4,7 @@ import socket
 import threading
 import random
 import datetime
+import os
 
 class ChatClientGUI:
     def __init__(self, master):
@@ -27,7 +28,7 @@ class ChatClientGUI:
         try:
             self.nickname = simpledialog.askstring("Nickname", "Choose a nickname:")
             self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.host = '192.168.1.9'  # Update with server IP
+            self.host = '192.168.1.103'  # Update with server IP
             self.port =  55556
             self.client_socket.connect((self.host, self.port))
             self.client_socket.send(self.nickname.encode('utf-8'))
@@ -48,7 +49,7 @@ class ChatClientGUI:
     def send_file(self, file_path):
         try:
             with open(file_path, 'rb') as file:
-                file_name = file_path.split('/')[-1]  # Extract file name from the path
+                file_name = os.path.basename(file_path)  # Extract file name from the path
                 file_data = f'FILE:{file_name}\n'.encode('utf-8') + file.read()
                 self.client_socket.send(file_data)
         except Exception as e:

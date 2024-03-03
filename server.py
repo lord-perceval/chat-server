@@ -3,9 +3,10 @@ import socket
 import queue
 import tkinter as tk
 from tkinter import scrolledtext
+import os
 
 # Your existing server code
-host = '192.168.1.9'
+host = '192.168.1.103'
 port =  55556
 
 server_running = True  # Variable to control the server state
@@ -44,13 +45,18 @@ def handle(client):
             if message.startswith('FILE:'):
                 # If the message starts with 'FILE:', it indicates a file transfer
                 file_data = client.recv(1024)
-                file_name, file_content = file_data.split(b'\n',  1)
+                file_name, file_content = file_data.split(b'\n', 1)
                 file_name = file_name.decode('utf-8')
 
                 broadcast(f'{nicknames[clients.index(client)]} sent a file: {file_name}'.encode('ascii'))
 
-                # Save the received file
-                with open(file_name, 'wb') as file:
+                # Create a folder for the received files
+                folder_name = f'{nicknames[clients.index(client)]}_files'
+                os.makedirs(folder_name, exist_ok=True)
+
+                # Save the received file in the folder
+                file_path = os.path.join(folder_name, file_name)
+                with open(file_path, 'wb') as file:
                     file.write(file_content)
 
                 broadcast(f'{nicknames[clients.index(client)]}\'s file {file_name} received'.encode('ascii'))
@@ -61,6 +67,7 @@ def handle(client):
             print("An error occurred:", e)
             handle_disconnect(client)
             break
+
 
 def receive():
     while server_running:
