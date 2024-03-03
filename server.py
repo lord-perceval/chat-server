@@ -18,6 +18,7 @@ server.listen()
 clients = []
 nicknames = []
 
+
 # Create a queue for messages
 message_queue = queue.Queue()
 
