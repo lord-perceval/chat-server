@@ -88,11 +88,15 @@ class ChatClientGUI:
         try:
             self.client_socket.send('/list_files'.encode('utf-8'))
             files_list = self.client_socket.recv(1024).decode('utf-8')
-            self.display_message(f"Files in 'FILES' folder:\n{files_list}")
+        # Split the received string into a list of file names
+            files = files_list.split('\n')
+        # Enumerate the list and format each file name with a number
+            formatted_files = [f"{i+1}. {file}" for i, file in enumerate(files) if file]
+        # Join the formatted file names with newlines and display the message
+            self.display_message("Files in 'FILES' folder:\n" + "\n".join(formatted_files))
         except Exception as e:
             print("An error occurred while requesting the file list:", e)
             self.display_message("Failed to retrieve the file list. Please try again.")
-
     
     def display_message(self, message):
         self.master.after(0, self._display_message, message)  # Schedule GUI update in the main thread
