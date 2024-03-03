@@ -16,19 +16,23 @@ class ChatClientGUI:
 
         self.entry_field = tk.Entry(master)
         self.entry_field.pack(expand=True, fill='x')
-        self.entry_field.bind('<Return>', lambda event: self.send_message())  # Bind Enter key to send_message
+        self.entry_field.bind('<Return>', lambda event: self.send_message()) # Bind Enter key to send_message
 
         self.send_button = tk.Button(master, text="Send", command=self.send_message)
         self.send_button.pack()
 
-        self.user_colors = {}  # Dictionary to map nicknames to colors
+            # Add a button for requesting the file list
+        self.list_files_button = tk.Button(master, text="List Files", command=self.request_file_list)
+        self.list_files_button.pack()
+
+        self.user_colors = {} # Dictionary to map nicknames to colors
         self.connect_to_server()
 
     def connect_to_server(self):
         try:
             self.nickname = simpledialog.askstring("Nickname", "Choose a nickname:")
             self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.host = '192.168.1.103'  # Update with server IP
+            self.host = '192.168.1.102'  # Update with server IP
             self.port =  55556
             self.client_socket.connect((self.host, self.port))
             self.client_socket.send(self.nickname.encode('utf-8'))
@@ -79,7 +83,17 @@ class ChatClientGUI:
                 print("An error occurred:", e)
                 self.client_socket.close()
                 break
+    
+    def request_file_list(self):
+        try:
+            self.client_socket.send('/list_files'.encode('utf-8'))
+            files_list = self.client_socket.recv(1024).decode('utf-8')
+            self.display_message(f"Files in 'FILES' folder:\n{files_list}")
+        except Exception as e:
+            print("An error occurred while requesting the file list:", e)
+            self.display_message("Failed to retrieve the file list. Please try again.")
 
+    
     def display_message(self, message):
         self.master.after(0, self._display_message, message)  # Schedule GUI update in the main thread
 

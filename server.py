@@ -6,7 +6,7 @@ from tkinter import scrolledtext
 import os
 
 # Your existing server code
-host = '192.168.1.103'
+host = '192.168.1.102'
 port =  55556
 
 server_running = True  # Variable to control the server state
@@ -38,12 +38,23 @@ def broadcast(message):
             # Handle cases where the client connection is no longer valid
             handle_disconnect(client)
 
+files_folder = 'FILES'
+os.makedirs(files_folder, exist_ok=True)
+
 def handle(client):
+    global files_folder
+
     while True:
         try:
             message = client.recv(1024).decode('utf-8')
 
-            if message.startswith('FILE:'):
+            if message == '/list_files':
+                print("Received /list_files command") # Debugging print statement
+                files_list = os.listdir(files_folder)
+                print(f"Files in {files_folder}: {files_list}") # Debugging print statement
+                files_str = "\n".join(files_list)
+                client.send(files_str.encode('utf-8'))
+            elif message.startswith('FILE:'):
                 # If the message starts with 'FILE:', it indicates a file transfer
                 file_data = client.recv(1024)
                 file_name, file_content = file_data.split(b'\n', 1)
@@ -51,12 +62,8 @@ def handle(client):
 
                 broadcast(f'{nicknames[clients.index(client)]} sent a file: {file_name}'.encode('ascii'))
 
-                # Create a folder for the received files
-                folder_name = f'{nicknames[clients.index(client)]}_files'
-                os.makedirs(folder_name, exist_ok=True)
-
-                # Save the received file in the folder
-                file_path = os.path.join(folder_name, file_name)
+                # Save the received file in the "FILES" folder
+                file_path = os.path.join(files_folder, file_name)
                 with open(file_path, 'wb') as file:
                     file.write(file_content)
 
@@ -68,6 +75,7 @@ def handle(client):
             print("An error occurred:", e)
             handle_disconnect(client)
             break
+
 
 
 def receive():
