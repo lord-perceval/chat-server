@@ -64,25 +64,45 @@ class ChatClientGUI:
         message = self.entry_field.get()
 
         if message.startswith('/file'):
-            file_path = message.split(' ',  1)[1]
+            file_path = message.split(' ', 1)[1]
             self.send_file(file_path)
+        elif message.startswith('/download'):
+            try:
+                # Check if the message contains a space and has a second element
+                parts = message.split(' ', 1)
+                if len(parts) > 1:
+                    file_number = int(parts[1])
+                    self.client_socket.send(f'/download:{file_number}'.encode('utf-8'))
+                else:
+                    self.display_message("Invalid command format. Please use '/download: <number>'")
+            except ValueError:
+                self.display_message("Invalid file number. Please enter a valid number.")
         elif message:
             full_message = f"{self.nickname}: {message}"
             self.client_socket.send(full_message.encode('utf-8'))
-            self.display_message(full_message)  # Display the message locally
+            self.display_message(full_message) # Display the message locally
 
         self.entry_field.delete(0, tk.END)
-
+               
+        
+    
     def receive(self):
         while True:
             try:
                 message = self.client_socket.recv(1024).decode('utf-8')
-                if not message.startswith(self.nickname + ':'):
+                if message.startswith('/download:'):
+                    file_data = self.client_socket.recv(1024) # Assuming the file data is sent immediately after the command
+                    file_path = 'downloaded_file.txt' # You might want to generate a unique file name or use the file name sent by the server
+                    with open(file_path, 'wb') as file:
+                        file.write(file_data)
+                    self.display_message(f"File downloaded successfully to {file_path}")
+                elif not message.startswith(self.nickname + ':'):
                     self.display_message(message)
             except Exception as e:
                 print("An error occurred:", e)
                 self.client_socket.close()
                 break
+                
     
     def request_file_list(self):
         try:

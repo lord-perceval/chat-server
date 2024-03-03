@@ -68,6 +68,21 @@ def handle(client):
                     file.write(file_content)
 
                 broadcast(f'{nicknames[clients.index(client)]}\'s file {file_name} received'.encode('ascii'))
+            elif message.startswith('/download:'):
+                # Handle file download request
+                try:
+                    file_number = int(message.split(':', 1)[1])
+                    files_list = os.listdir(files_folder)
+                    if 0 < file_number <= len(files_list):
+                        file_name = files_list[file_number - 1]
+                        file_path = os.path.join(files_folder, file_name)
+                        with open(file_path, 'rb') as file:
+                            file_data = file.read()
+                        client.send(file_data)
+                    else:
+                        client.send("Invalid file number.".encode('utf-8'))
+                except ValueError:
+                    client.send("Invalid file number.".encode('utf-8'))
             else:
                 # Otherwise, it's a regular message
                 broadcast(message.encode('utf-8'))
