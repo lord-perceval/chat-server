@@ -28,7 +28,7 @@ class ChatClientGUI:
         try:
             self.nickname = simpledialog.askstring("Nickname", "Choose a nickname:")
             self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.host = '192.168.1.103'  # Update with server IP
+            self.host = '192.168.126.190'  # Update with server IP
             self.port =  55556
             self.client_socket.connect((self.host, self.port))
             self.client_socket.send(self.nickname.encode('utf-8'))
@@ -85,7 +85,7 @@ class ChatClientGUI:
 
     def _display_message(self, message):
         try:
-            sender, msg = message.split(':',  1)
+            sender, msg = message.split(':', 1)
 
             if sender not in self.user_colors:
                 user_color = self.generate_random_color()
@@ -95,8 +95,18 @@ class ChatClientGUI:
             user_color = self.user_colors[sender]
             self.chat_history.configure(state='normal')
             timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.chat_history.insert('end', f"{timestamp} {sender}: {msg}\n", user_color)
+
+            # Center the timestamp and display the message
+            centered_timestamp = f"{timestamp:^{len(msg) + len(sender) + 2}}"
+
+            # Insert the centered timestamp
+            self.chat_history.insert('end', f"{centered_timestamp}\n", user_color)
             self.chat_history.tag_add(user_color, 'end-2c', 'end-1c')
+
+            # Insert the message without attempting to center it
+            self.chat_history.insert('end', f"{sender}: {msg}\n", user_color)
+            self.chat_history.tag_add(user_color, 'end-2c', 'end-1c')
+
             self.chat_history.configure(state='disabled')
             self.chat_history.see('end')
         except ValueError:
@@ -104,6 +114,8 @@ class ChatClientGUI:
             self.chat_history.insert('end', message + '\n')
             self.chat_history.configure(state='disabled')
             self.chat_history.see('end')
+  
+        
 
     def generate_random_color(self):
         return '#%02x%02x%02x' % (random.randint(0,  255), random.randint(0,  255), random.randint(0,  255))
