@@ -6,7 +6,7 @@ from tkinter import scrolledtext
 import os
 
 # Your existing server code
-host = '192.168.1.102'
+host = '192.168.126.190'
 port =  55556
 
 server_running = True  # Variable to control the server state
