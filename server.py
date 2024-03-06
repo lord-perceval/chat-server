@@ -4,19 +4,26 @@ import queue
 import tkinter as tk
 from tkinter import scrolledtext
 import os
+import ssl  # Import SSL module for secure communication
 
 # Your existing server code
-host = '192.168.126.190'
-port =  55556
+host = '192.168.1.103'  # Update with your server IP or domain
+port = 55556
 
-server_running = True  # Variable to control the server state
+server_running = True
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR,  1)
+server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 server.bind((host, port))
 server.listen()
 
 clients = []
 nicknames = []
+
+# Wrap the server socket with SSL context
+ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+ssl_context.load_cert_chain('example.crt', 'example.key')  # Use the self-signed certificate and private key
+
+server_ssl = ssl_context.wrap_socket(server, server_side=True)
 
 
 # Create a queue for messages
@@ -96,7 +103,7 @@ def handle(client):
 def receive():
     while server_running:
         try:
-            client, address = server.accept()
+            client, address = server_ssl.accept()
             message_queue.put(f"connected with {str(address)}")
 
             client.send('NICK'.encode('ascii'))
@@ -127,7 +134,7 @@ def start_server():
 def stop_server():
     global server_running
     server_running = False
-    server.close()  # Close the server socket to stop accepting new connections
+    server_ssl.close()  # Close the server socket to stop accepting new connections
     message_queue.put("Server stopped")
 
 def create_gui():

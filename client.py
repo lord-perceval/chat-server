@@ -5,8 +5,10 @@ import threading
 import random
 import datetime
 import os
+import ssl
 
 class ChatClientGUI:
+    
     def __init__(self, master):
         self.master = master
         master.title("Chat Client")
@@ -26,14 +28,26 @@ class ChatClientGUI:
         self.list_files_button.pack()
 
         self.user_colors = {} # Dictionary to map nicknames to colors
+        self.nickname = simpledialog.askstring("Nickname", "Enter your nickname:")
         self.connect_to_server()
+        
 
     def connect_to_server(self):
         try:
-            self.nickname = simpledialog.askstring("Nickname", "Choose a nickname:")
+            #self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.host = '192.168.126.190'  # Update with server IP
-            self.port =  55556
+            self.host = '192.168.1.103'  # Update with your server IP or domain
+            self.port = 55556
+
+        # Create an SSL context
+            # Create an SSL context
+            ssl_context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
+            ssl_context.check_hostname = False
+            ssl_context.verify_mode = ssl.CERT_NONE
+            
+
+        # Wrap the client socket with the SSL context
+            self.client_socket = ssl_context.wrap_socket(self.client_socket, server_hostname=self.host)
             self.client_socket.connect((self.host, self.port))
             self.client_socket.send(self.nickname.encode('utf-8'))
 
