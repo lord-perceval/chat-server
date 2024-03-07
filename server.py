@@ -7,7 +7,7 @@ import os
 import ssl  # Import SSL module for secure communication
 
 # Your existing server code
-host = '192.168.43.234'  # Update with your server IP or domain
+host = '192.168.126.190'  # Update with your server IP or domain
 port = 55556
 
 server_running = True
