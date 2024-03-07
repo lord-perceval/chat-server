@@ -55,44 +55,8 @@ def handle(client):
         try:
             message = client.recv(1024).decode('utf-8')
 
-            if message == '/list_files':
-                print("Received /list_files command") 
-                files_list = os.listdir(files_folder)
-                print(f"Files in {files_folder}: {files_list}") 
-                files_str = "\n".join(files_list)
-                client.send(files_str.encode('utf-8'))
-            elif message.startswith('FILE:'):
-                
-                file_data = client.recv(1024)
-                file_name, file_content = file_data.split(b'\n', 1)
-                file_name = file_name.decode('utf-8')
-
-                broadcast(f'{nicknames[clients.index(client)]} sent a file: {file_name}'.encode('ascii'))
-
-               
-                file_path = os.path.join(files_folder, file_name)
-                with open(file_path, 'wb') as file:
-                    file.write(file_content)
-
-                broadcast(f'{nicknames[clients.index(client)]}\'s file {file_name} received'.encode('ascii'))
-            elif message.startswith('/download:'):
-                
-                try:
-                    file_number = int(message.split(':', 1)[1])
-                    files_list = os.listdir(files_folder)
-                    if 0 < file_number <= len(files_list):
-                        file_name = files_list[file_number - 1]
-                        file_path = os.path.join(files_folder, file_name)
-                        with open(file_path, 'rb') as file:
-                            file_data = file.read()
-                        client.send(file_data)
-                    else:
-                        client.send("Invalid file number.".encode('utf-8'))
-                except ValueError:
-                    client.send("Invalid file number.".encode('utf-8'))
-            else:
-                
-                broadcast(message.encode('utf-8'))
+            
+            broadcast(message.encode('utf-8'))
         except socket.error as e:
             print("An error occurred:", e)
             handle_disconnect(client)
