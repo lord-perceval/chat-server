@@ -123,7 +123,7 @@ def receive():
         except socket.error as e:
             print("An error occurred:", e)
 
-# GUI code
+
 def start_server():
     global server_running
     server_running = True
@@ -134,7 +134,7 @@ def start_server():
 def stop_server():
     global server_running
     server_running = False
-    server_ssl.close()  # Close the server socket to stop accepting new connections
+    server_ssl.close()  
     message_queue.put("Server stopped")
 
 def create_gui():
@@ -150,14 +150,14 @@ def create_gui():
     stop_button = tk.Button(root, text="Stop Server", command=stop_server)
     stop_button.pack(pady=5)
 
-    # Function to update the GUI with messages from the queue
+    
     def update_gui():
         while not message_queue.empty():
             message = message_queue.get()
             output_text.insert(tk.END, message + '\n')
-        root.after(100, update_gui)  # Check the queue every   100ms
+        root.after(100, update_gui)  
 
-    update_gui()  # Start updating the GUI
+    update_gui()  
 
     root.mainloop()
 
