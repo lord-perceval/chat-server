@@ -36,7 +36,7 @@ class ChatClientGUI:
         try:
             #self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.host = '192.168.1.103'  # Update with your server IP or domain
+            self.host = '192.168.43.234'  # Update with your server IP or domain
             self.port = 55556
 
         # Create an SSL context
