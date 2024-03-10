@@ -4,19 +4,26 @@ import queue
 import tkinter as tk
 from tkinter import scrolledtext
 import os
+import ssl  # Import SSL module for secure communication
 
 # Your existing server code
-host = '192.168.126.190'
-port =  55556
+host = '192.168.1.102'  # Update with your server IP or domain
+port = 55556
 
-server_running = True  # Variable to control the server state
+server_running = True
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR,  1)
+server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 server.bind((host, port))
 server.listen()
 
 clients = []
 nicknames = []
+
+# Wrap the server socket with SSL context
+ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+ssl_context.load_cert_chain('example.crt', 'example.key')  # Use the self-signed certificate and private key
+
+server_ssl = ssl_context.wrap_socket(server, server_side=True)
 
 
 # Create a queue for messages
@@ -38,12 +45,23 @@ def broadcast(message):
             # Handle cases where the client connection is no longer valid
             handle_disconnect(client)
 
+files_folder = 'FILES'
+os.makedirs(files_folder, exist_ok=True)
+
 def handle(client):
+    global files_folder
+
     while True:
         try:
             message = client.recv(1024).decode('utf-8')
 
-            if message.startswith('FILE:'):
+            if message == '/list_files':
+                print("Received /list_files command") # Debugging print statement
+                files_list = os.listdir(files_folder)
+                print(f"Files in {files_folder}: {files_list}") # Debugging print statement
+                files_str = "\n".join(files_list)
+                client.send(files_str.encode('utf-8'))
+            elif message.startswith('FILE:'):
                 # If the message starts with 'FILE:', it indicates a file transfer
                 file_data = client.recv(1024)
                 file_name, file_content = file_data.split(b'\n', 1)
@@ -51,16 +69,39 @@ def handle(client):
 
                 broadcast(f'{nicknames[clients.index(client)]} sent a file: {file_name}'.encode('ascii'))
 
-                # Create a folder for the received files
-                folder_name = f'{nicknames[clients.index(client)]}_files'
-                os.makedirs(folder_name, exist_ok=True)
-
-                # Save the received file in the folder
-                file_path = os.path.join(folder_name, file_name)
+                # Save the received file in the "FILES" folder
+                file_path = os.path.join(files_folder, file_name)
                 with open(file_path, 'wb') as file:
                     file.write(file_content)
 
                 broadcast(f'{nicknames[clients.index(client)]}\'s file {file_name} received'.encode('ascii'))
+            elif message.startswith('/download:'):
+                # Handle file download request
+                try:
+                    file_number = int(message.split(':', 1)[1])
+                    files_list = os.listdir(files_folder)
+                    if 0 < file_number <= len(files_list):
+                        file_name = files_list[file_number - 1]
+                        file_path = os.path.join(files_folder, file_name)
+                        with open(file_path, 'rb') as file:
+                            file_data = file.read()
+                        client.send(file_data)
+                    else:
+                        client.send("Invalid file number.".encode('utf-8'))
+                except ValueError:
+                    client.send("Invalid file number.".encode('utf-8'))
+            
+            elif message.startswith('/private'):
+                # Handle private message request
+                try:
+                    _, target_nickname, private_message = message.split(' ', 2)
+                    target_index = nicknames.index(target_nickname)
+                    target_client = clients[target_index]
+                    private_message = f'Private message from {nicknames[clients.index(client)]}: {private_message}'
+                    target_client.send(private_message.encode('utf-8'))
+                except ValueError:
+                    client.send("Invalid command format. Please use '/private <nickname> <message>'".encode('utf-8'))
+            
             else:
                 # Otherwise, it's a regular message
                 broadcast(message.encode('utf-8'))
@@ -70,10 +111,11 @@ def handle(client):
             break
 
 
+
 def receive():
     while server_running:
         try:
-            client, address = server.accept()
+            client, address = server_ssl.accept()
             message_queue.put(f"connected with {str(address)}")
 
             client.send('NICK'.encode('ascii'))
@@ -104,7 +146,7 @@ def start_server():
 def stop_server():
     global server_running
     server_running = False
-    server.close()  # Close the server socket to stop accepting new connections
+    server_ssl.close()  # Close the server socket to stop accepting new connections
     message_queue.put("Server stopped")
 
 def create_gui():
