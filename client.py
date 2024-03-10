@@ -21,7 +21,7 @@ class ChatClientGUI:
 
         self.entry_field = tk.Entry(master)
         self.entry_field.pack(expand=True, fill='x', side=tk.LEFT)  # Adjusted placement
-        self.entry_field.bind('<Return>', lambda event: self.send_message)
+        self.entry_field.bind('<Return>', lambda event: self.send_message())  # Use parentheses to call the method
 
         self.send_button = tk.Button(master, text="Send", command=self.send_message)
         self.send_button.pack(side=tk.RIGHT)  # Placed on the right side
