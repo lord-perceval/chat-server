@@ -7,7 +7,7 @@ import os
 import ssl  # Import SSL module for secure communication
 
 # Your existing server code
-host = '192.168.126.190'  # Update with your server IP or domain
+host = '192.168.1.102'  # Update with your server IP or domain
 port = 55556
 
 server_running = True
@@ -90,6 +90,18 @@ def handle(client):
                         client.send("Invalid file number.".encode('utf-8'))
                 except ValueError:
                     client.send("Invalid file number.".encode('utf-8'))
+            
+            elif message.startswith('/private'):
+                # Handle private message request
+                try:
+                    _, target_nickname, private_message = message.split(' ', 2)
+                    target_index = nicknames.index(target_nickname)
+                    target_client = clients[target_index]
+                    private_message = f'Private message from {nicknames[clients.index(client)]}: {private_message}'
+                    target_client.send(private_message.encode('utf-8'))
+                except ValueError:
+                    client.send("Invalid command format. Please use '/private <nickname> <message>'".encode('utf-8'))
+            
             else:
                 # Otherwise, it's a regular message
                 broadcast(message.encode('utf-8'))
